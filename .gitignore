@@ -7,8 +7,8 @@ __pycache__/
 .env
 
 # Datasets and model weights - regenerable, too large for git
-data/
-models/
+/data/
+/models/
 *.bin
 *.safetensors
 *.pt
