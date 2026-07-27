@@ -1,10 +1,5 @@
+from src.config import DATASET_NAMES
 from src.data.load_datasets import load_hf_dataset
-
-DATASET_NAMES = [
-    "qualifire/prompt-injections-benchmark",
-    "neuralchemy/Prompt-injection-dataset",
-    "Necent/llm-jailbreak-prompt-injection-dataset",
-]
 
 LABEL_COLUMN_CANDIDATES = ["label", "labels", "category", "class"]
 
