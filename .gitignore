@@ -1,0 +1,25 @@
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# Environment variables / secrets (API keys go here later - NEVER commit this file)
+.env
+
+# Datasets and model weights - regenerable, too large for git
+data/
+models/
+*.bin
+*.safetensors
+*.pt
+*.ckpt
+
+# HuggingFace cache if it ends up local to the project
+.cache/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# OS/editor clutter
+.DS_Store
+.vscode/
