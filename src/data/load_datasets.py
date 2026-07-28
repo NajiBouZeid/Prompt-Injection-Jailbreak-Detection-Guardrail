@@ -19,3 +19,10 @@ def save_raw_dataset(dataset_name: str, df: pd.DataFrame, raw_dir: str = "data/r
     path = os.path.join(raw_dir, f"{safe_name}.parquet")
     df.to_parquet(path, index=False)
     return path
+
+
+def load_raw_dataset(dataset_name: str, raw_dir: str = "data/raw") -> pd.DataFrame:
+    """Load a dataset previously saved by save_raw_dataset, from its local parquet file."""
+    safe_name = dataset_name.replace("/", "__")
+    path = os.path.join(raw_dir, f"{safe_name}.parquet")
+    return pd.read_parquet(path)
