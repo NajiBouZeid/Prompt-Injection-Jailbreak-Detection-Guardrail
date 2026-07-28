@@ -79,14 +79,15 @@ def train(
         learning_rate=learning_rate,
         # Checkpoint every 1000 optimizer steps (not just at epoch end) so a
         # run can be stopped and resumed across multiple sessions instead of
-        # needing one uninterrupted multi-hour sitting.
-        eval_strategy="steps",
-        eval_steps=1000,
+        # needing one uninterrupted multi-hour sitting. Evaluation is *not*
+        # run at each checkpoint - a full pass over the 47k-row val set takes
+        # ~55 minutes on this hardware, which would multiply total wall-clock
+        # time many times over across ~23 checkpoints. Eval runs once, after
+        # training finishes, via the explicit trainer.evaluate() call below.
+        eval_strategy="no",
         save_strategy="steps",
         save_steps=1000,
         save_total_limit=3,
-        load_best_model_at_end=True,
-        metric_for_best_model="f1",
         bf16=True,
         logging_steps=100,
         report_to="none",
@@ -102,6 +103,9 @@ def train(
     )
 
     trainer.train(resume_from_checkpoint=resume_from_checkpoint)
+    eval_metrics = trainer.evaluate()
+    print("Final validation metrics:", eval_metrics)
+
     trainer.save_model(output_dir)
     tokenizer.save_pretrained(output_dir)
 
