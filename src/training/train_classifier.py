@@ -50,12 +50,13 @@ def train(
     output_dir: str = "models/deberta-v3-base-guardrail",
     train_split: str = "train",
     val_split: str = "val",
-    num_train_epochs: float = 2,
+    num_train_epochs: float = 1,
     per_device_train_batch_size: int = 8,
     gradient_accumulation_steps: int = 2,
     per_device_eval_batch_size: int = 32,
     learning_rate: float = 2e-5,
     max_examples: int | None = None,
+    resume_from_checkpoint: str | bool | None = None,
 ):
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     # deberta-v3-base's checkpoint is stored in fp16, and its disentangled
@@ -76,9 +77,14 @@ def train(
         gradient_accumulation_steps=gradient_accumulation_steps,
         per_device_eval_batch_size=per_device_eval_batch_size,
         learning_rate=learning_rate,
-        eval_strategy="epoch",
-        save_strategy="epoch",
-        save_total_limit=2,
+        # Checkpoint every 1000 optimizer steps (not just at epoch end) so a
+        # run can be stopped and resumed across multiple sessions instead of
+        # needing one uninterrupted multi-hour sitting.
+        eval_strategy="steps",
+        eval_steps=1000,
+        save_strategy="steps",
+        save_steps=1000,
+        save_total_limit=3,
         load_best_model_at_end=True,
         metric_for_best_model="f1",
         bf16=True,
@@ -95,7 +101,7 @@ def train(
         compute_metrics=compute_metrics,
     )
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=resume_from_checkpoint)
     trainer.save_model(output_dir)
     tokenizer.save_pretrained(output_dir)
 
