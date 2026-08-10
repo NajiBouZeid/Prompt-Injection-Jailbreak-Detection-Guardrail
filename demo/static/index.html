@@ -98,6 +98,14 @@
   .example-chip:hover { color: var(--text-primary); border-color: var(--text-muted); }
   .example-chip.attack { color: var(--bad); }
   .example-chip.benign { color: var(--good); }
+  .example-chip.sample { color: var(--accent); border-color: var(--accent); background: var(--accent-wash); margin-left: auto; }
+
+  .ground-truth {
+    display: none; font-size: 12px; color: var(--text-secondary); margin-top: 10px;
+    padding: 8px 12px; background: var(--surface-page); border: 1px solid var(--border); border-radius: 8px;
+  }
+  .ground-truth.visible { display: block; }
+  .ground-truth b { color: var(--text-primary); }
 
   .actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
   button.check {
@@ -166,7 +174,9 @@
       <button class="example-chip attack" data-kind="attack" type="button">DAN jailbreak persona</button>
       <button class="example-chip benign" data-kind="benign" type="button">Summarize an article</button>
       <button class="example-chip benign" data-kind="benign" type="button">Explain recursion</button>
+      <button class="example-chip sample" id="sampleBtn" type="button">🎲 Sample from test set</button>
     </div>
+    <div class="ground-truth" id="groundTruth"></div>
     <div class="actions">
       <button class="check" id="checkBtn" type="button">Check prompt</button>
       <span class="char-count" id="charCount">0 / 4000</span>
@@ -223,15 +233,40 @@
     charCount.textContent = `${promptInput.value.length} / 4000`;
   });
 
-  document.querySelectorAll(".example-chip").forEach(chip => {
+  document.querySelectorAll(".example-chip[data-kind]").forEach(chip => {
     chip.addEventListener("click", () => {
       const kind = chip.dataset.kind;
       const list = EXAMPLES[kind];
       promptInput.value = list[exampleCycle[kind] % list.length];
       exampleCycle[kind]++;
       promptInput.dispatchEvent(new Event("input"));
+      groundTruth.classList.remove("visible");
       promptInput.focus();
     });
+  });
+
+  const sampleBtn = document.getElementById("sampleBtn");
+  const groundTruth = document.getElementById("groundTruth");
+
+  sampleBtn.addEventListener("click", async () => {
+    sampleBtn.disabled = true;
+    try {
+      const res = await fetch("/api/sample");
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const data = await res.json();
+      promptInput.value = data.text;
+      promptInput.dispatchEvent(new Event("input"));
+      groundTruth.innerHTML = `Held-out test row · source: <b>${data.source_dataset}</b> · true label: <b>${data.true_label}</b>`;
+      groundTruth.classList.add("visible");
+      result.classList.remove("visible");
+      placeholder.style.display = "block";
+      placeholder.textContent = "Result will appear here.";
+    } catch (err) {
+      groundTruth.textContent = `Error: ${err.message}`;
+      groundTruth.classList.add("visible");
+    } finally {
+      sampleBtn.disabled = false;
+    }
   });
 
   async function checkPrompt() {
