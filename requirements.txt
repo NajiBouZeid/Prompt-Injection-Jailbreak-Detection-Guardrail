@@ -13,3 +13,5 @@ python-dotenv
 sentence-transformers
 datasketch
 langdetect
+fastapi
+uvicorn
