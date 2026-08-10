@@ -32,6 +32,26 @@ Both are evaluated on the same labeled dataset and compared on precision, recall
    ```
    This should print `True`.
 
+## Demo
+
+A local web demo serves the fine-tuned checkpoint behind a small FastAPI backend with a
+browser frontend — paste a prompt, get an attack/benign verdict with the model's confidence.
+
+```
+python -m scripts.run_demo
+```
+
+Then open http://127.0.0.1:8000 in a browser. Everything runs locally; no prompt text is sent
+anywhere external. Full training/evaluation results, including how the deployed decision
+threshold was chosen, are in the [training & evaluation report](https://claude.ai/code/artifact/671c0fc4-aa8d-4287-a3ff-28c83aa8cd13).
+
+For scripted/CLI use instead of the web UI:
+```
+python -m scripts.classify "some prompt to check"
+```
+
 ## Status
 
-Work in progress — dataset acquisition and exploration phase.
+DeBERTa classifier trained and evaluated (99.4% test accuracy, see the report above for the
+full breakdown including known weak spots and how they were addressed). Benchmarked against
+an LLM-as-judge (Gemini) and the LLM Guard baseline. Local demo working end-to-end.
