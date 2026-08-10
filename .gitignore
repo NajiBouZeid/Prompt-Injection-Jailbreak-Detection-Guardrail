@@ -26,7 +26,7 @@ eval_report*.json
 leakage_report*.json
 leakage_examples.txt
 qualifire_language_report.json
-threshold_sweep_val.json
+threshold_sweep_*.json
 train_loss_history.json
 train_loss_sampled.json
 *.log
