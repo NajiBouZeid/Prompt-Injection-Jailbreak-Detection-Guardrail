@@ -1,5 +1,6 @@
 # Python virtual environment
 venv/
+venv-llmguard/
 __pycache__/
 *.pyc
 
@@ -19,6 +20,16 @@ __pycache__/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
+
+# Eval/comparison outputs, logs, and other regenerable run artifacts
+eval_report*.json
+leakage_report*.json
+leakage_examples.txt
+qualifire_language_report.json
+threshold_sweep_val.json
+train_loss_history.json
+train_loss_sampled.json
+*.log
 
 # OS/editor clutter
 .DS_Store
