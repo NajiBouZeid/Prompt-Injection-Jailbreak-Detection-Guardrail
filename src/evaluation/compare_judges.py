@@ -1,6 +1,7 @@
 import json
 
 import pandas as pd
+from sklearn.metrics import cohen_kappa_score
 
 from src.evaluation.evaluate_classifier import (
     compute_binary_metrics,
@@ -72,6 +73,13 @@ def compare(model_dir: str, batch_size: int = 32) -> dict:
     answered = df[~df["gemini_refused"]]
     report["agreement_rate"] = float(
         (answered["deberta_prediction"] == answered["gemini_prediction"]).mean()
+    )
+    # Cohen's Kappa: agreement corrected for the agreement expected by chance
+    # alone, given each judge's own label distribution - a stricter, more
+    # standard measure than raw agreement_rate for comparing two classifiers
+    # (or a classifier and an LLM judge) that never saw each other's guesses.
+    report["cohen_kappa"] = float(
+        cohen_kappa_score(answered["deberta_prediction"], answered["gemini_prediction"])
     )
 
     disagreements = answered[answered["deberta_prediction"] != answered["gemini_prediction"]]
