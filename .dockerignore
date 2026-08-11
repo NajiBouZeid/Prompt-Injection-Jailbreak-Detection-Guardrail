@@ -1,0 +1,28 @@
+venv/
+venv-llmguard/
+__pycache__/
+*.pyc
+.git/
+.env
+.cache/
+.ipynb_checkpoints/
+
+# Raw/intermediate data - the Dockerfile only needs data/processed/test.parquet.
+data/raw/
+
+# Exclude the full model dir (training checkpoints, optimizer state, etc.) but
+# re-include exactly the 4 inference files the Dockerfile COPYs - excluding the
+# whole directory would otherwise hide those files from the build context too.
+models/**
+!models/deberta-v3-base-guardrail/
+!models/deberta-v3-base-guardrail/checkpoint-23512/
+!models/deberta-v3-base-guardrail/checkpoint-23512/config.json
+!models/deberta-v3-base-guardrail/checkpoint-23512/model.safetensors
+!models/deberta-v3-base-guardrail/checkpoint-23512/tokenizer.json
+!models/deberta-v3-base-guardrail/checkpoint-23512/tokenizer_config.json
+
+*.log
+eval_report*.json
+leakage_report*.json
+threshold_sweep_*.json
+train_loss*.json
