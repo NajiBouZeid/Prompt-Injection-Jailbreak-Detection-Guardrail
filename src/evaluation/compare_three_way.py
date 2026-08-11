@@ -1,6 +1,7 @@
 import json
 
 import pandas as pd
+from sklearn.metrics import cohen_kappa_score
 
 from src.evaluation.compare_judges import GEMINI_RESULTS_PATH, LABEL_MAP, load_gemini_predictions
 from src.evaluation.evaluate_classifier import compute_binary_metrics, load_model, predict_dataframe
@@ -65,5 +66,28 @@ def compare(model_dir: str, batch_size: int = 32) -> dict:
         report[f"llm_guard_source__{source}"] = compute_binary_metrics(
             group["label"].to_numpy(), group["llm_guard_prediction"].to_numpy()
         )
+
+    # Pairwise Cohen's Kappa between all three judges - how much the judges
+    # agree with EACH OTHER (not with ground truth), corrected for chance
+    # agreement. Gemini's refused rows are excluded from any pair it's in,
+    # same rule used for its own accuracy metrics above.
+    answered = df[~df["gemini_refused"]]
+    report["pairwise_agreement"] = {
+        "deberta_vs_gemini": {
+            "cohen_kappa": float(cohen_kappa_score(answered["deberta_prediction"], answered["gemini_prediction"])),
+            "raw_agreement_rate": float((answered["deberta_prediction"] == answered["gemini_prediction"]).mean()),
+            "n": int(len(answered)),
+        },
+        "deberta_vs_llm_guard": {
+            "cohen_kappa": float(cohen_kappa_score(df["deberta_prediction"], df["llm_guard_prediction"])),
+            "raw_agreement_rate": float((df["deberta_prediction"] == df["llm_guard_prediction"]).mean()),
+            "n": int(len(df)),
+        },
+        "gemini_vs_llm_guard": {
+            "cohen_kappa": float(cohen_kappa_score(answered["gemini_prediction"].astype(int), answered["llm_guard_prediction"])),
+            "raw_agreement_rate": float((answered["gemini_prediction"].astype(int) == answered["llm_guard_prediction"]).mean()),
+            "n": int(len(answered)),
+        },
+    }
 
     return report
