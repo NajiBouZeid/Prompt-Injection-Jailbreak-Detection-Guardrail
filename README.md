@@ -50,6 +50,27 @@ For scripted/CLI use instead of the web UI:
 python -m scripts.classify "some prompt to check"
 ```
 
+### Running the demo in Docker
+
+The demo can also run in a container, so it works on any machine with Docker installed and
+no manual Python/venv setup — useful for reproducing the exact environment elsewhere.
+
+```
+docker build -t prompt-guardrail-demo .
+docker run -p 8000:8000 prompt-guardrail-demo
+```
+
+Then open http://localhost:8000, same as the local (non-Docker) demo above.
+
+The image is CPU-only (no GPU passthrough required) and installs from `requirements-demo.txt`
+rather than the full `requirements.txt` — it only needs the packages the demo actually imports
+at runtime, not the training/evaluation-only ones (`sentence-transformers`, `google-genai`,
+`datasketch`, `langdetect`, `accelerate`). It also only copies the four checkpoint files
+`load_model()` actually reads (`config.json`, `model.safetensors`, `tokenizer.json`,
+`tokenizer_config.json`), not the full `models/deberta-v3-base-guardrail/checkpoint-23512/`
+directory — the rest of that directory is training-only state (optimizer/scheduler/RNG),
+about 1.4GB the container never touches.
+
 ## Status
 
 DeBERTa classifier trained and evaluated (99.4% test accuracy, see the report above for the
