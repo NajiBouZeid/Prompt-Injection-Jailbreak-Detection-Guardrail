@@ -6,6 +6,7 @@ import torch
 from datasets import Dataset
 from sklearn.metrics import (
     average_precision_score,
+    brier_score_loss,
     confusion_matrix,
     matthews_corrcoef,
     precision_recall_fscore_support,
@@ -27,6 +28,27 @@ def load_test_split(test_split: str = "test", max_examples: int | None = None) -
     return df
 
 
+def expected_calibration_error(labels: np.ndarray, probs: np.ndarray, n_bins: int = 10) -> float:
+    """Mean gap between predicted confidence and actual accuracy, bucketed into
+    n_bins equal-width probability bins and weighted by bin size - the standard
+    ECE formulation. A well-calibrated model (predicted probabilities match
+    real-world frequencies) scores near 0; qualifire's known miscalibration
+    (see the threshold-sweep findings) is exactly what this metric is meant to
+    surface directly, instead of only inferring it indirectly from an ROC-AUC/
+    accuracy mismatch."""
+    bin_edges = np.linspace(0.0, 1.0, n_bins + 1)
+    bin_ids = np.clip(np.digitize(probs, bin_edges[1:-1]), 0, n_bins - 1)
+    ece = 0.0
+    for b in range(n_bins):
+        mask = bin_ids == b
+        if not mask.any():
+            continue
+        bin_confidence = probs[mask].mean()
+        bin_accuracy = labels[mask].mean()
+        ece += (mask.sum() / len(probs)) * abs(bin_confidence - bin_accuracy)
+    return float(ece)
+
+
 def compute_binary_metrics(
     labels: np.ndarray, predictions: np.ndarray, probs: np.ndarray | None = None
 ) -> dict:
@@ -46,10 +68,17 @@ def compute_binary_metrics(
         },
         "n": int(len(labels)),
     }
-    # AUC metrics need both classes present and are undefined for tiny/degenerate groups.
+    # AUC/calibration metrics need both classes present and are undefined for
+    # tiny/degenerate groups.
     if probs is not None and len(np.unique(labels)) == 2:
         metrics["roc_auc"] = float(roc_auc_score(labels, probs))
         metrics["pr_auc"] = float(average_precision_score(labels, probs))
+        # Brier score: mean squared error between predicted probability and the
+        # true 0/1 label - a direct calibration measure, distinct from ROC-AUC
+        # (which only cares about ranking, not whether the probabilities
+        # themselves are trustworthy). Lower is better, 0 is perfect.
+        metrics["brier_score"] = float(brier_score_loss(labels, probs))
+        metrics["ece"] = expected_calibration_error(labels, probs)
     return metrics
 
 
