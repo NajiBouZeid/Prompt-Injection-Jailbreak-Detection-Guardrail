@@ -1,0 +1,19 @@
+# Minimal dependency set for running the demo (FastAPI backend + Guardrail
+# inference) in Docker. Deliberately excludes training/eval-only packages from
+# the main requirements.txt (sentence-transformers, google-genai, datasketch,
+# langdetect, accelerate) to keep the image small.
+#
+# torch itself is intentionally NOT listed here - the Dockerfile installs a
+# CPU-only build explicitly via --index-url, since the default PyPI "torch"
+# wheel bundles CUDA and would balloon the image by several GB for no benefit
+# in a CPU-only container.
+transformers
+datasets
+scikit-learn
+pandas
+numpy
+pyarrow
+sentencepiece
+protobuf
+fastapi
+uvicorn
